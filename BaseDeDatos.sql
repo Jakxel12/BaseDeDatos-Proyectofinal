@@ -1,3 +1,8 @@
+--Crear base de datos
+Create database Universidad
+--Hacer uso de la base de datos
+use Universidad
+
 -- Tabla de cursos
 CREATE TABLE cursos (
     id_curso INT PRIMARY KEY
