@@ -6,7 +6,6 @@ BEGIN
     SELECT 
         c.id_clase,                 -- Selecciona el ID de la clase de la tabla 'clases'
         p.id_profesor,              -- Selecciona el ID del profesor de la tabla 'profesores'
-        p.nombre AS nombre_profesor, -- Selecciona el nombre del profesor y lo asigna como 'nombre_profesor'
         c.id_tipocancelacion,       -- Selecciona el ID del tipo de cancelación de la clase
         c.id_horario,               -- Selecciona el ID del horario de la clase
         c.id_tipotarea,             -- Selecciona el ID del tipo de tarea de la clase
