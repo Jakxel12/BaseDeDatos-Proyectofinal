@@ -1,4 +1,8 @@
-CREATE VIEW VistaEmpleados AS
-SELECT IdEmpleado, Nombre, Departamento, Salario
-FROM Empleados
-WHERE Activo = 1;
+CREATE VIEW VistaGruposActivos AS
+SELECT 
+    id_grupo,
+    id_profesor,
+    id_curso,
+    activo
+FROM grupos
+WHERE activo = 1;
