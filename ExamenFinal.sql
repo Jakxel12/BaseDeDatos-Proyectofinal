@@ -3,7 +3,6 @@ Create database Universidad
 --Hacer uso de la base de datos
 use Universidad
 
-
 ------------------------------------------------------------------------Crear tablas------------------------------------------------------------------------
 
   
@@ -14,8 +13,7 @@ CREATE TABLE cursos (
 
 -- Tabla de profesores
 CREATE TABLE profesores (
-    id_profesor INT PRIMARY KEY
-
+    id_profesor INT PRIMARY KEY,
 );
 
 -- Tabla de grupos
@@ -30,8 +28,8 @@ CREATE TABLE grupos (
 
 -- Tabla de historial de profesores en grupos (cambios de profesor en un grupo)
 CREATE TABLE historial_profesores_grupos (
-    id_historial INT PRIMARY KEY,
-    id_grupo INT,
+	id_historial INT IDENTITY(1,1),
+	id_grupo INT,
     id_profesor INT,
     fecha_inicio DATE,
     fecha_fin DATE,
@@ -87,8 +85,8 @@ CREATE TABLE matriculas (
 
 -- Tabla de historial de alumnos en grupos (cambios de grupo de un alumno)
 CREATE TABLE historial_alumnos_grupos (
-    id_historial INT PRIMARY KEY,
-    id_alumno INT,
+	id_historial INT IDENTITY(1,1) PRIMARY KEY, 
+	id_alumno INT,
     id_grupo INT,
     fecha_inicio DATE,
     fecha_fin DATE,
@@ -151,11 +149,13 @@ VALUES (1);
 -- Insertar un profesor
 INSERT INTO profesores (id_profesor, nombre)
 VALUES (1, 'Juan Pérez');
+INSERT INTO profesores (id_profesor, nombre)
+VALUES (2, 'Pedro Rios');
 
 -- Insertar un grupo
 INSERT INTO grupos (id_grupo, id_profesor, id_curso, activo)
 VALUES (1, 1, 1, 1);
-
+select * from grupos
 -- Insertar un alumno
 INSERT INTO alumnos (id_alumno)
 VALUES (1);
@@ -163,6 +163,10 @@ VALUES (1);
 -- Insertar una matrícula
 INSERT INTO matriculas (id_matricula, id_curso, id_alumno)
 VALUES (1, 1, 1);
+select * from matriculas
+
+--insertar historial alumnos grupos
+insert into historial_alumnos_grupos (id_historial,id_alumno, id_grupo, fecha_inicio, fecha_fin) values (1, 1, 1, '2024-08-08', '2024-11-10')
 
 --------------------------------------MODIFICAR-------------------------------------------
 
@@ -178,10 +182,10 @@ WHERE id_grupo = 1;
 
 -- Cambiar el curso asociado a una matrícula
 UPDATE matriculas
-SET id_curso = 2
+SET id_curso = 1
 WHERE id_matricula = 1;
 
---------------------------------------EMILINAR--------------------------------------------
+--------------------------------------Eliiminar--------------------------------------------
 
 -- Eliminar un curso
 DELETE FROM cursos
@@ -206,9 +210,7 @@ WHERE fecha_fin IS NOT NULL;
 --Obtener las matriculas de alumnos con el historial de grupos:
 SELECT 
     m.id_matricula, 
-    a.nombre_alumno, 
-    h.id_grupo, 
-    g.nombre_grupo
+    h.id_grupo
 FROM 
     matriculas m
 JOIN 
@@ -218,15 +220,16 @@ JOIN
 JOIN 
     grupos g ON h.id_grupo = g.id_grupo;
 --Consultar el curso más popular (el curso con más matriculas):
-SELECT nombre_curso 
-FROM cursos 
-WHERE id_curso = (
-    SELECT id_curso 
-    FROM matriculas 
-    GROUP BY id_curso 
-    ORDER BY COUNT(*) DESC 
-    LIMIT 1
+SELECT id_curso
+FROM cursos
+WHERE id_curso IN (
+    SELECT TOP 100 PERCENT id_curso
+    FROM matriculas
+    GROUP BY id_curso
+    ORDER BY COUNT(*) DESC
 );
+
+
 ----------------------------------------------------------------------------vistas-------------------------------------------------------------------------
 CREATE VIEW VistaGruposActivos AS
 SELECT 
@@ -236,6 +239,9 @@ SELECT
     activo
 FROM grupos
 WHERE activo = 1;
+
+
+select * from VistaGruposActivos;
 ------------------------------------------------------------------------Funciones------------------------------------------------------------------------
 -- Primera Función: udfEstadoGrupo
 CREATE FUNCTION dbo.udfEstadoGrupo(@Activo BIT) --Define la función con un parámetro de entrada "@Activo" de tipo "BIT"
@@ -311,6 +317,8 @@ select dbo.udfNombreProfesor(1);
 
 ------------------------------------------------------------------------store procedure con parametros------------------------------------------------------------------------
 --crear procedimiento
+sp_help 'historial_profesores_grupos';
+
 CREATE PROCEDURE sp_cambiar_profesor_grupo
 (
     @p_id_grupo INT,
@@ -325,12 +333,12 @@ BEGIN
         
         -- Declaración de variables locales
         DECLARE @v_id_profesor_actual INT;
-        
+
         -- 1. Obtener el profesor actual del grupo
         SELECT @v_id_profesor_actual = id_profesor
         FROM grupos
         WHERE id_grupo = @p_id_grupo;
-        
+
         -- Verificar que el grupo existe y tiene un profesor asignado
         IF @v_id_profesor_actual IS NULL
         BEGIN
@@ -374,15 +382,15 @@ BEGIN
     END CATCH;
 END;
 
--- Ejecutar el procedimiento almacenado sp_cambiar_profesor_grupo
 DECLARE @id_grupo INT = 1;           -- ID del grupo que deseas actualizar
-DECLARE @id_profesor_nuevo INT = 2;   -- ID del nuevo profesor
+DECLARE @id_profesor_nuevo INT = 2;  -- ID del nuevo profesor
 DECLARE @fecha_cambio DATE = '2024-11-11'; -- Fecha del cambio de profesor
 
 EXEC sp_cambiar_profesor_grupo 
     @p_id_grupo = @id_grupo, 
     @p_id_profesor_nuevo = @id_profesor_nuevo, 
     @p_fecha_cambio = @fecha_cambio;
+
 ------------------------------------------------------------------------StoreProcedure sin parametros------------------------------------------------------------------------
 
 
@@ -463,4 +471,5 @@ BEGIN
     SELECT id_grupo, id_profesor, id_curso, activo, 'DELETE' -- Especifica la acción como 'DELETE'
     FROM deleted; -- Usa la tabla 'deleted' para obtener los valores antes de la eliminación
 END;
+
 
